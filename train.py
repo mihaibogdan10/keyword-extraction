@@ -1,114 +1,137 @@
 import csv
+import numpy as np
+import pylab as pl
+import time
+
 from nltk.tokenize import RegexpTokenizer
 from nltk.stem.wordnet import WordNetLemmatizer
-from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.neighbors import NearestNeighbors
+from sklearn.feature_extraction.text import HashingVectorizer 
+from sklearn.linear_model.stochastic_gradient import SGDClassifier
 
-DOCUMENTS_COUNT = 13000
-#Will consider that tokens appearing in more than 
-#RELEVANCE_THRESHOLD * DOCUMENTS_COUNT documents
-#are not relevant to the meaning of any document
-RELEVANCE_THRESHOLD = 0.05
+DOCUMENTS_COUNT = 20000
 
 class LemmaTokenizer(object):
     def __init__(self):
         self.wnl = WordNetLemmatizer()
-        self.tkn = RegexpTokenizer(r'(?:[0-9]|[a-z]|[\$\#\%\&\*\-])*[a-z]+(?:[0-9]|[a-z]|[\$\#\%\&\*\-])*')
+        allowed_chars = '[0-9]|[a-z]|[\$\#\%\&\*\-]'
+        self.tkn = RegexpTokenizer( r'(?:{0})*[a-z]+(?:{0})*'.format(allowed_chars))
     def __call__(self, doc):
         return [self.wnl.lemmatize(t) for t in self.tkn.tokenize(doc)]
 
-class VocabularyTokenizer(object):
-    def __init__(self, vocabulary):
-        self.wnl = WordNetLemmatizer()
-        self.tkn = RegexpTokenizer(r'(?:[0-9]|[a-z]|[\$\#\%\&\*\-])*[a-z]+(?:[0-9]|[a-z]|[\$\#\%\&\*\-])*')
-        self.vocabulary = vocabulary
-    def __call__(self, doc):
-        return [self.wnl.lemmatize(t) for t in self.tkn.tokenize(doc) if self.wnl.lemmatize(t) in vocabulary]
+hvectorizer = HashingVectorizer(tokenizer=LemmaTokenizer(),
+                                n_features=2 ** 21,
+                                stop_words='english',
+                                lowercase=True,
+                                non_negative=True)
+
+# Create an online classifier i.e. supporting `partial_fit()`
+classifier = SGDClassifier()
+
+# Here we propose to learn a binary classification between the positive class
+# and all other documents
+all_classes = np.array([0, 1])
+positive_class = 'javascript'
 
 
-def getRelevantVocabulary(corpus):
-    tokenize = LemmaTokenizer()
-    token_frequency = {}
-    for index, document in enumerate(corpus):
-        tokens = set(tokenize(document))
-        for token in tokens:
-            if token not in token_frequency:
-                token_frequency[token] = 1
+
+def iter_minibatchs(size, transformer=hvectorizer):
+    """Generator of minibatchs of examples, returns a tuple X, y.
+    """
+
+    corpus = []
+    keywords = []
+    for index, row in enumerate(csv.reader(open("Train_no_duplicates.csv"))):
+        if index == 0:
+            column_names = row 
+        elif len(corpus) == size:
+            yield (transformer.transform(corpus), np.asarray(keywords, dtype=int))
+            corpus = []
+            keywords = []
+        else:
+            title = row[1]
+            description = row[2]
+            tags = row[3].split(' ')
+            if positive_class in tags:
+                keywords.append(1)
             else:
-                token_frequency[token] += 1
+                keywords.append(0)
+            corpus.append(title)
 
-    token_frequency_list = []
-    for key in token_frequency.iterkeys():
-        token_frequency_list.append((token_frequency[key], key))
+# structure to track accuracy history
+stats = {'n_train': 0, 'n_test': 0, 'n_train_pos': 0, 'n_test_pos': 0,
+         'accuracy': 0.0, 'accuracy_history': [(0, 0)], 't0': time.time(),
+         'runtime_history': [(0, 0)]}
 
-    token_frequency_list = sorted(token_frequency_list, reverse=True)
-    return set([token for count, token in token_frequency_list if count < RELEVANCE_THRESHOLD * DOCUMENTS_COUNT])
+# We will feed the classifier with mini-batches of 100 documents; this means
+# we have at most 100 docs in memory at any time.
+MINIBATCH_SIZE = 100
+minibatch_iterator = iter_minibatchs(MINIBATCH_SIZE)
+
+# First we hold out a number of examples to estimate accuracy
+TEST_BATCHES_NO = 10
+TRAIN_BATCHES_NO = 90
+
+X_test, y_test = minibatch_iterator.next()
+for index in xrange(TEST_BATCHES_NO - 1):
+    X_test_temp, y_test_temp = minibatch_iterator.next()
+    print X_test.asarray()
+    X_test = np.concatenate([X_test, X_test_temp])
+    y_test = np.concatenate([y_test, y_test_temp])
+    
+stats['n_test'] += len(y_test)
+stats['n_test_pos'] += sum(y_test)
+
+print("Test set is %d documents (%d positive)" % (len(y_test), sum(y_test)))
+
+def progress(stats):
+    """Report progress information, return a string."""
+    duration = time.time() - stats['t0']
+    s = "%(n_train)6d train docs (%(n_train_pos)6d positive) " % stats
+    s += "%(n_test)6d test docs (%(n_test_pos)6d positive) " % stats
+    s += "accuracy: %(accuracy).3f " % stats
+    s += "in %.2fs (%5d docs/s)" % (duration, stats['n_train'] / duration)
+    return s
+
+# Main loop : iterate on mini-batchs of examples
+for i, (X_train, y_train) in enumerate(minibatch_iterators):
+    # update estimator with examples in the current mini-batch
+    classifier.partial_fit(X_train, y_train, classes=all_classes)
+    # accumulate test accuracy stats
+    stats['n_train'] += X_train.shape[0]
+    stats['n_train_pos'] += sum(y_train)
+    stats['accuracy'] = classifier.score(X_test, y_test)
+    stats['accuracy_history'].append((stats['accuracy'], stats['n_train']))
+    stats['runtime_history'].append((stats['accuracy'],
+                                     time.time() - stats['t0']))
+    if i % 10 == 0:
+        print(progress(stats))
+
+###############################################################################
+# Plot results
+###############################################################################
 
 
-def euclidianDistanceSquared(x, y):
-    assert(len(x) == len(y))
-    return sum((x[k] - y[k])**2 for k in xrange(len(x)))
+def plot_accuracy(x, y, plot_placement, x_legend):
+    """Plot accuracy as a function of x."""
+    x = np.array(x)
+    y = np.array(y)
+    pl.subplots_adjust(hspace=0.5)
+    pl.subplot(plot_placement)
+    pl.title('Classification accuracy as a function of %s' % x_legend)
+    pl.xlabel('%s' % x_legend)
+    pl.ylabel('Accuracy')
+    pl.grid(True)
+    pl.plot(x, y)
 
+pl.figure(1)
 
-corpus = []
-keywords = []
-for index, row in enumerate(csv.reader(open("Train_no_duplicates.csv"))):
-    if index == 0:
-        columns = row 
-    else:
-        title = row[1].lower()
-        #print title
-        description = row[2].lower()
-        keywords.append(row[3])
-        corpus.append(title)
-        #corpus.append(title + ' ' + description)
-        #print title
-        #print description
-        if index == DOCUMENTS_COUNT:
-            break
+# Plot accuracy evolution with #examples
+accuracy, n_examples = zip(*stats['accuracy_history'])
+plot_accuracy(n_examples, accuracy, 211, "training examples (#)")
 
-vocabulary = getRelevantVocabulary(corpus)
+# Plot accuracy evolution with runtime
+accuracy, runtime = zip(*stats['runtime_history'])
+plot_accuracy(runtime, accuracy, 212, 'runtime (s)')
 
-vectorizer = CountVectorizer(tokenizer=VocabularyTokenizer(vocabulary))
-transformer = TfidfTransformer()
-tfvectorizer = TfidfVectorizer(tokenizer=VocabularyTokenizer(vocabulary))
-neighbors = NearestNeighbors(n_neighbors=5)
-columns = []
-all_tokens = {}
-
-
-X = vectorizer.fit_transform(corpus)
-neighbors.fit(X)
-distances, indeces = neighbors.kneighbors(X)
-neighbours_group = indeces[0]
-#print neighbours_group
-#vocabulary = vectorizer.get_feature_names()
-#temp_X = X.toarray()
-
-for index in neighbours_group:
-    #for i, feature in enumerate(temp_X[index]):
-    #    if feature != 0:
-    #        print feature, vocabulary[i]
-    print corpus[index], ": ", keywords[index], "\n\n\n"
-
-#first_feature_vector = temp_X[0]
-#distances = []
-
-#for index, feature_vector in enumerate(temp_X):
-#    new_dist =  euclidianDistanceSquared(first_feature_vector, feature_vector)
-#    distances.append((new_dist, index))
-
-#sorted_distances = sorted(distances)
-#for dist, index in sorted_distances[:5]:
-#    for i, feature in enumerate(temp_X[index]):
-#        if feature != 0:
-#            print feature, vocabulary[i]
-#    print corpus[index], ": ", keywords[index]
-#    print 'distance: ', dist, '\n\n\n'
-
-#print X.toarray()
-#TX = transformer.fit_transform(X.toarray()).toarray()
-#print TX
-
+pl.show()
