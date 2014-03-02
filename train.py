@@ -63,22 +63,14 @@ stats = {'n_train': 0, 'n_test': 0, 'n_train_pos': 0, 'n_test_pos': 0,
          'accuracy': 0.0, 'accuracy_history': [(0, 0)], 't0': time.time(),
          'runtime_history': [(0, 0)]}
 
-# We will feed the classifier with mini-batches of 100 documents; this means
-# we have at most 100 docs in memory at any time.
-MINIBATCH_SIZE = 100
+# We will feed the classifier with mini-batches of 50 documents; this means
+# we have at most 50 docs in memory at any time.
+MINIBATCH_SIZE = 50
+TRAIN_BATCHES_NO = 100
 minibatch_iterator = iter_minibatchs(MINIBATCH_SIZE)
 
 # First we hold out a number of examples to estimate accuracy
-TEST_BATCHES_NO = 10
-TRAIN_BATCHES_NO = 90
-
-X_test, y_test = minibatch_iterator.next()
-for index in xrange(TEST_BATCHES_NO - 1):
-    X_test_temp, y_test_temp = minibatch_iterator.next()
-    print X_test.asarray()
-    X_test = np.concatenate([X_test, X_test_temp])
-    y_test = np.concatenate([y_test, y_test_temp])
-    
+X_test, y_test = iter_minibatchs(1000).next()
 stats['n_test'] += len(y_test)
 stats['n_test_pos'] += sum(y_test)
 
@@ -89,12 +81,12 @@ def progress(stats):
     duration = time.time() - stats['t0']
     s = "%(n_train)6d train docs (%(n_train_pos)6d positive) " % stats
     s += "%(n_test)6d test docs (%(n_test_pos)6d positive) " % stats
-    s += "accuracy: %(accuracy).3f " % stats
+    s += "accuracy: %(accuracy).6f " % stats
     s += "in %.2fs (%5d docs/s)" % (duration, stats['n_train'] / duration)
     return s
 
 # Main loop : iterate on mini-batchs of examples
-for i, (X_train, y_train) in enumerate(minibatch_iterators):
+for i, (X_train, y_train) in enumerate(minibatch_iterator):
     # update estimator with examples in the current mini-batch
     classifier.partial_fit(X_train, y_train, classes=all_classes)
     # accumulate test accuracy stats
@@ -106,6 +98,8 @@ for i, (X_train, y_train) in enumerate(minibatch_iterators):
                                      time.time() - stats['t0']))
     if i % 10 == 0:
         print(progress(stats))
+    if i >= TRAIN_BATCHES_NO:
+        break
 
 ###############################################################################
 # Plot results
