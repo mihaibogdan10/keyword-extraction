@@ -9,8 +9,6 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import HashingVectorizer 
 from sklearn.linear_model.stochastic_gradient import SGDClassifier
 
-DOCUMENTS_COUNT = 20000
-
 class LemmaTokenizer(object):
     def __init__(self):
         self.wnl = WordNetLemmatizer()
