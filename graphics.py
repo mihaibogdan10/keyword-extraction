@@ -1,3 +1,6 @@
+"""Python script to analyze tags: distribution, etc.
+"""
+
 import csv
 import numpy as np
 import pylab as pl
