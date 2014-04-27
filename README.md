@@ -9,4 +9,7 @@ Comparison in terms of
 </ul>
 for algorithms that can be used to extract keywords from a text document.
 
-The used .csv dump can be found here: https://archive.org/details/stackexchange
+The used .csv dump can be found at https://archive.org/details/stackexchange:
+```
+wget --no-check-certificate https://archive.org/download/stackexchange/stackoverflow.com-Posts.7z
+```
