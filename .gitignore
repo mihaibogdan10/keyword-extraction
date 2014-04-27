@@ -1,4 +1,5 @@
 *.pyc
+*.pickle
 
 # C extensions
 *.so

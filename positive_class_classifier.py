@@ -4,22 +4,22 @@ import time
 from sklearn.feature_extraction.text import HashingVectorizer 
 from sklearn.linear_model.stochastic_gradient import SGDClassifier
 
-from module_utils import TRAIN_FILE, TEST_FILE, MINIBATCH_SIZE, iter_minibatchs
+from module_utils import TRAIN_FILE, TEST_FILE, iter_minibatchs
 from lemma_tokenizer import LemmaTokenizer
 
 
 class PositiveClassClassifier(object):
-    hvectorizer = HashingVectorizer(tokenizer=LemmaTokenizer(),
-                                    n_features=2 ** 21,
-                                    stop_words='english',
-                                    lowercase=True,
-                                    non_negative=True)
+    hvectorizer = HashingVectorizer(tokenizer = LemmaTokenizer(),
+                                    n_features = 2 ** 19,
+                                    stop_words = 'english',
+                                    lowercase = True,
+                                    non_negative = True)
  
     all_classes = np.array([0, 1])
     
     def __init__(self, positive_class):
         # Create an online classifier i.e. supporting `partial_fit()`
-        self.classifier = SGDClassifier()
+        self.classifier = SGDClassifier(loss = 'log')
 
         # Here we propose to learn a binary classification of the positive class
         # and all other documents
@@ -39,7 +39,7 @@ class PositiveClassClassifier(object):
         return s
 
     def train(self):
-        TRAIN_BATCHES_NO = 50
+        TRAIN_BATCHES_NO = 100
         minibatch_iterator = iter_minibatchs(TRAIN_FILE, self.hvectorizer, self.positive_class)
  
         # Main loop : iterate on mini-batchs of examples
@@ -67,7 +67,6 @@ class PositiveClassClassifier(object):
         
         for i, (x_test, y_test) in enumerate(minibatch_iterator):
             y_test = np.asarray(y_test)
-            print y_test
             score += self.classifier.score(x_test, y_test)
 
             if i >= TEST_BATCHES_NO - 1:
