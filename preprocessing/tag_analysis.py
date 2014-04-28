@@ -45,7 +45,7 @@ def get_tags_data():
     total_tags = sum([count for count, tag in data['tag_list']])
     relative_occurence = [count * 1.0 / total_tags for count, tag in data['tag_list']]
 
-    print get_percentile(0.90, relative_occurence)
+    print get_percentile(0.40, relative_occurence)
     print data['tag_list'][2000:2005]
 
 if __name__ == "__main__":

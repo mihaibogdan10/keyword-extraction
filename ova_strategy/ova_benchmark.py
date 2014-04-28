@@ -36,7 +36,7 @@ def train_PCCs():
 def benchmark_OVA(PCCs): 
     minibatch_iterator = iter_minibatchs(TEST_FILE, PositiveClassClassifier.hvectorizer)
     
-    TEST_BATCHES_NO = 1
+    TEST_BATCHES_NO = 100
     tp = fp = fn = 0
 
     for batch_no, (x_test, y_test) in enumerate(minibatch_iterator):
@@ -50,7 +50,6 @@ def benchmark_OVA(PCCs):
         for i in xrange(len(predictions)):
             predictions[i].sort(reverse = True)
 
-        print predictions[1][:5]
         for i in xrange(len(y_test)):
             predicted_tags = predictions[i][:3]
             for prediction in predicted_tags:
