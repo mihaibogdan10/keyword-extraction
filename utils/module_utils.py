@@ -1,9 +1,12 @@
+import numpy as np
+import pylab as pl
 import csv
+from sys import stdout
 
-TRAIN_FILE = "Train_no_duplicates.csv"
-TEST_FILE  = "Test_file.csv"
-TAGS_DUMP_FILE = 'tag_data.pickle'
-OVA_DUMP_FILE = 'ova_classifiers.pickle'
+TRAIN_FILE = "data/Train_no_duplicates.csv"
+TEST_FILE  = "data/Test_file.csv"
+TAGS_DUMP_FILE = "data/tag_data.pickle"
+OVA_DUMP_FILE = "data/ova_classifiers.pickle"
 
 # We will feed the classifier with mini-batches of 50 documents
 # This means we have at most 50 docs in memory at any time.
@@ -30,15 +33,27 @@ def iter_minibatchs(input_file, transformer, positive_class=None):
         if index % size == size - 1:
             yield (transformer.transform(corpus), keywords)
 
-def create_test_file():
-    test_writer = csv.writer(open(TEST_FILE, "w"))
-    data = []
-    for index, row in enumerate(csv.reader(open(TRAIN_FILE))):
-        if index % 100000 == 0:
-            print index / 100000
-        if index < 5.5 * 10 ** 6:
-            pass
-        else:
-            data.append(row)
+def static_var(varname, value):
+    def decorate(func):
+        setattr(func, varname, value)
+        return func
+    return decorate
 
-    test_writer.writerows(data)
+@static_var("prev_msg_size", 0)
+def print_overwrite(current_msg):
+    print ' ' * print_overwrite.prev_msg_size  + '\r',
+    stdout.flush()
+
+    print_overwrite.prev_msg_size = len(current_msg)
+    print current_msg + '\r',
+    stdout.flush()
+
+
+def plot_distribution(x, y, xlabel, ylabel):
+    x = np.array(x)
+    y = np.array(y)
+    pl.xlabel(xlabel)
+    pl.ylabel(ylabel)
+    pl.grid(True)
+    pl.plot(x, y)
+    pl.show

@@ -4,13 +4,13 @@ import time
 from sklearn.feature_extraction.text import HashingVectorizer 
 from sklearn.linear_model.stochastic_gradient import SGDClassifier
 
-from module_utils import TRAIN_FILE, TEST_FILE, iter_minibatchs
+from utils.module_utils import TRAIN_FILE, TEST_FILE, iter_minibatchs
 from lemma_tokenizer import LemmaTokenizer
 
 
 class PositiveClassClassifier(object):
     hvectorizer = HashingVectorizer(tokenizer = LemmaTokenizer(),
-                                    n_features = 2 ** 19,
+                                    n_features = 2 ** 15,
                                     stop_words = 'english',
                                     lowercase = True,
                                     non_negative = True)
@@ -55,8 +55,8 @@ class PositiveClassClassifier(object):
                                                    self.stats['n_train']))
             self.stats['runtime_history'].append((self.stats['accuracy'],
                                                   time.time() - self.stats['t0']))
-            if i % 10 == 0:
-                print(self.progress())
+            #if i % 10 == 0:
+            #    print self.progress()
             if i >= TRAIN_BATCHES_NO - 1:
                 break
 

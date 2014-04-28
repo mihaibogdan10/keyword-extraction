@@ -5,19 +5,7 @@ import os.path
 
 from itertools import izip
 from positive_class_classifier import PositiveClassClassifier
-from module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, TEST_FILE, iter_minibatchs
-
-def plot_accuracy(x, y, plot_placement, x_legend):
-    """Plot accuracy as a function of x."""
-    x = np.array(x)
-    y = np.array(y)
-    pl.subplots_adjust(hspace=0.5)
-    pl.subplot(plot_placement)
-    pl.title('Classification accuracy as a function of %s' % x_legend)
-    pl.xlabel('%s' % x_legend)
-    pl.ylabel('Accuracy')
-    pl.grid(True)
-    pl.plot(x, y)
+from utils.module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, TEST_FILE, iter_minibatchs, print_overwrite
 
 def train_PCCs():
     if os.path.isfile(OVA_DUMP_FILE):
@@ -26,15 +14,17 @@ def train_PCCs():
             return PCCs
 
     #the ova_classifiers weren't yet trained -> train them
-    TAG_CANDIDATES_NO = 100
+    TAG_CANDIDATES_NO = 15
 
     with open(TAGS_DUMP_FILE, 'rb') as tags_dump_file:
         tag_list = pickle.load(tags_dump_file)['tag_list']
 
     PCCs = []
-    for i in xrange(TAG_CANDIDATES_NO):
+
+    range_len = min(TAG_CANDIDATES_NO, len(tag_list))
+    for i in xrange(range_len):
         count, tag = tag_list[i]
-        print "Training positive class classifier for the tag:", tag
+        print_overwrite("Training positive class classifier for the tag: " + tag + '(' + str(i * 100 / range_len) + '%)')
         classifier = PositiveClassClassifier(tag)
         classifier.train()
         PCCs.append(classifier)
@@ -60,6 +50,7 @@ def benchmark_OVA(PCCs):
         for i in xrange(len(predictions)):
             predictions[i].sort(reverse = True)
 
+        print predictions[1][:5]
         for i in xrange(len(y_test)):
             predicted_tags = predictions[i][:3]
             for prediction in predicted_tags:
