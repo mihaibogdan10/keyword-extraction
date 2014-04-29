@@ -4,7 +4,7 @@ import time
 from sklearn.feature_extraction.text import HashingVectorizer 
 from sklearn.linear_model.stochastic_gradient import SGDClassifier
 
-from utils.module_utils import TRAIN_FILE, TEST_FILE, iter_minibatchs
+from utils.module_utils import OVA_TRAIN_FILE, TEST_FILE, iter_minibatchs
 from lemma_tokenizer import LemmaTokenizer
 
 
@@ -39,8 +39,7 @@ class PositiveClassClassifier(object):
         return s
 
     def train(self):
-        TRAIN_BATCHES_NO = 100
-        minibatch_iterator = iter_minibatchs(TRAIN_FILE, self.hvectorizer, self.positive_class)
+        minibatch_iterator = iter_minibatchs(OVA_TRAIN_FILE, self.hvectorizer, self.positive_class)
  
         # Main loop : iterate on mini-batchs of examples
         for i, (x_train, y_train) in enumerate(minibatch_iterator):
@@ -57,8 +56,6 @@ class PositiveClassClassifier(object):
                                                   time.time() - self.stats['t0']))
             #if i % 10 == 0:
             #    print self.progress()
-            if i >= TRAIN_BATCHES_NO - 1:
-                break
 
     def score(self): 
         TEST_BATCHES_NO = 20

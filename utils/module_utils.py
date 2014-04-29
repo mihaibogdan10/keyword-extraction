@@ -4,10 +4,12 @@ import csv
 from sys import stdout
 
 TRAIN_FILE = "data/Train_no_duplicates.csv"
+OVA_TRAIN_FILE = "data/Train_ova.csv"
 TEST_FILE  = "data/Test_file.csv"
 TAGS_DUMP_FILE = "data/tag_data.pickle"
 OVA_DUMP_FILE = "data/ova_classifiers.pickle"
 QUESTIONS_NO = 6034195
+OVA_TAGS_NO = 100
 
 # We will feed the classifier with mini-batches of 50 documents
 # This means we have at most 50 docs in memory at any time.

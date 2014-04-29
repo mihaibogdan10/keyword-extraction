@@ -7,6 +7,8 @@ def create_test_file():
     data = []
     for index, row in enumerate(csv.reader(open(TRAIN_FILE))):
         if index % 10000 == 0:
+            test_writer.writerows(data)
+            data = []
             print_overwrite("Traversing train file: " + str(index * 100 / QUESTIONS_NO) + " %")
         if index < QUESTIONS_NO * 0.9:
             pass

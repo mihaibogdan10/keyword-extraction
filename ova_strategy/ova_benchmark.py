@@ -5,7 +5,7 @@ import os.path
 
 from itertools import izip
 from positive_class_classifier import PositiveClassClassifier
-from utils.module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, TEST_FILE, iter_minibatchs, print_overwrite
+from utils.module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, TEST_FILE, OVA_TAGS_NO, iter_minibatchs, print_overwrite
 
 def train_PCCs():
     if os.path.isfile(OVA_DUMP_FILE):
@@ -14,14 +14,12 @@ def train_PCCs():
             return PCCs
 
     #the ova_classifiers weren't yet trained -> train them
-    TAG_CANDIDATES_NO = 15
-
     with open(TAGS_DUMP_FILE, 'rb') as tags_dump_file:
         tag_list = pickle.load(tags_dump_file)['tag_list']
 
     PCCs = []
 
-    range_len = min(TAG_CANDIDATES_NO, len(tag_list))
+    range_len = min(OVA_TAGS_NO, len(tag_list))
     for i in xrange(range_len):
         count, tag = tag_list[i]
         print_overwrite("Training positive class classifier for the tag: " + tag + '(' + str(i * 100 / range_len) + '%)')
