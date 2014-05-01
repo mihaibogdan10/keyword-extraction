@@ -4,7 +4,7 @@ import time
 from sklearn.feature_extraction.text import HashingVectorizer 
 from sklearn.linear_model.stochastic_gradient import SGDClassifier
 
-from utils.module_utils import OVA_TRAIN_FILE, TEST_FILE, iter_minibatchs
+from utils.module_utils import OVA_TRAIN_FILE, TEST_FILE, iter_minibatches
 from lemma_tokenizer import LemmaTokenizer
 
 

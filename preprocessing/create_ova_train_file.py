@@ -1,7 +1,7 @@
 import csv
 import pickle
 from collections import defaultdict
-from utils.module_utils import OVA_TRAIN_FILE, TRAIN_FILE, QUESTIONS_NO, OVA_TAGS_NO, TAGS_DUMP_FILE, print_overwrite
+from utils.module_utils import OVA_TRAIN_FILE, TRAIN_FILE, DOCUMENTS_NO, OVA_TAGS_NO, TAGS_DUMP_FILE, print_overwrite
 
 def create_ova_train_file():
     with open(TAGS_DUMP_FILE, 'rb') as tags_dump_file:
@@ -15,11 +15,11 @@ def create_ova_train_file():
     count = defaultdict(int)
     for index, row in enumerate(csv.reader(open(TRAIN_FILE))):
         #the last 10% of training data is used to construct a test file
-        if index >= QUESTIONS_NO * 0.9:
+        if index >= DOCUMENTS_NO * 0.9:
             break
 
         if index % 10000 == 0:
-            print_overwrite("Traversing the train file: " + str(int(index * 100 / (0.9 * QUESTIONS_NO))) + " %")
+            print_overwrite("Traversing the train file: " + str(int(index * 100 / (0.9 * DOCUMENTS_NO))) + " %")
 
         keywords = set(row[3].split(' '))
         ova_counts = [count[keyword] for keyword in keywords & ova_tag_set]

@@ -5,7 +5,8 @@ import os.path
 
 from itertools import izip
 from positive_class_classifier import PositiveClassClassifier
-from utils.module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, TEST_FILE, OVA_TAGS_NO, iter_minibatchs, print_overwrite
+from utils.module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, TRAIN_FILE, TEST_FILE, \
+    DOCUMENTS_NO, OVA_TAGS_NO, iter_documents, iter_minibatches, print_overwrite
 
 def train_PCCs():
     if os.path.isfile(OVA_DUMP_FILE):
@@ -17,22 +18,50 @@ def train_PCCs():
     with open(TAGS_DUMP_FILE, 'rb') as tags_dump_file:
         tag_list = pickle.load(tags_dump_file)['tag_list']
 
-    PCCs = []
-
+    PCCs = {}
+    tag_count = {}
+    classifier_tags_to_train = set()
     range_len = min(OVA_TAGS_NO, len(tag_list))
+    
     for i in xrange(range_len):
         count, tag = tag_list[i]
-        print_overwrite("Training positive class classifier for the tag: " + tag + '(' + str(i * 100 / range_len) + '%)')
+        tag_count[tag] = {'positives' : min(count, 1000), 'negatives' : min(count, 1000)}
         classifier = PositiveClassClassifier(tag)
-        classifier.train()
-        PCCs.append(classifier)
+        PCCs[tag] = classifier
+        classifier_tags_to_train.add(tag)
+
+    documents_iterator = iter_documents(TRAIN_FILE, PositiveClassClassifier.hvectorizer)
+
+    for doc_no, (x_train, y_train) in enumerate(documents_iterator):
+        print_overwrite("Batch training ... " + '(' + "%.3f" % (doc_no * 100.0 / DOCUMENTS_NO) + ' %)')
+        
+        #positive training for PCCs whose tags appear in y_train
+        for tag in y_train:
+            if tag in PCCs:
+                PCC = PCCs[tag]
+                PCC.classifier.partial_fit(x_train, [1], classes = PCC.all_classes)
+                tag_count[tag]['positives'] -= 1
+
+        tags_with_complete_negative_training = []
+
+        #negative training for all the others
+        for tag in classifier_tags_to_train:
+            if tag not in y_train:
+                PCC = PCCs[tag]
+                PCC.classifier.partial_fit(x_train, [0], classes = PCC.all_classes)
+                tag_count[tag]['negatives'] -= 1
+                if tag_count[tag]['negatives'] == 0:
+                    tags_with_complete_negative_training.append(tag)
+
+        for tag in tags_with_complete_negative_training:
+            classifier_tags_to_train.remove(tag)
 
     with open(OVA_DUMP_FILE, 'wb') as ova_classifiers:
-        pickle.dump(PCCs, ova_classifiers)
-    return PCCs
+        pickle.dump(PCCs.values(), ova_classifiers)
+    return PCCs.values()
 
 def benchmark_OVA(PCCs): 
-    minibatch_iterator = iter_minibatchs(TEST_FILE, PositiveClassClassifier.hvectorizer)
+    minibatch_iterator = iter_minibatches(TEST_FILE, PositiveClassClassifier.hvectorizer)
     
     TEST_BATCHES_NO = 100
     tp = fp = fn = 0

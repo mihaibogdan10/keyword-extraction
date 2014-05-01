@@ -8,33 +8,53 @@ OVA_TRAIN_FILE = "data/Train_ova.csv"
 TEST_FILE  = "data/Test_file.csv"
 TAGS_DUMP_FILE = "data/tag_data.pickle"
 OVA_DUMP_FILE = "data/ova_classifiers.pickle"
-QUESTIONS_NO = 6034195
-OVA_TAGS_NO = 200
+DOCUMENTS_NO = 6034195
+OVA_TAGS_NO = 1000
 
 # We will feed the classifier with mini-batches of 50 documents
 # This means we have at most 50 docs in memory at any time.
 MINIBATCH_SIZE = 50
 
-def iter_minibatchs(input_file, transformer, positive_class=None):
-    """Generator of minibatchs of examples, returns a tuple x, y.
-    """
-
-    size = MINIBATCH_SIZE
-    corpus = [None] * size
-    keywords = list(corpus)
+def iter_documents(input_file, transformer, positive_class=None):
+    """Single document generator, returns a tuple x, y.
+    """ 
     for index, row in enumerate(csv.reader(open(input_file))):
         title = row[1]
         #description = row[2]
         tags = row[3].split(' ')
         
         if positive_class is None:
-            keywords[index % size] = tags
+            output = tags
         else:
-            keywords[index % size] = int(positive_class in tags)
+            output = [int(positive_class in tags)]
+        corpus = [title]
+
+        if index == 1000000:
+            break
+
+        yield (transformer.transform(corpus), output)
+
+
+def iter_minibatches(input_file, transformer, positive_class=None):
+    """Generator of minibatches of examples, returns a tuple x, y.
+    """
+
+    size = MINIBATCH_SIZE
+    corpus = [None] * size
+    output = list(corpus)
+    for index, row in enumerate(csv.reader(open(input_file))):
+        title = row[1]
+        #description = row[2]
+        tags = row[3].split(' ')
+        
+        if positive_class is None:
+            output[index % size] = tags
+        else:
+            output[index % size] = int(positive_class in tags)
         corpus[index % size] = title
 
         if index % size == size - 1:
-            yield (transformer.transform(corpus), keywords)
+            yield (transformer.transform(corpus), output)
 
 def static_var(varname, value):
     def decorate(func):
