@@ -9,31 +9,31 @@ TEST_FILE  = "data/Test_file.csv"
 TAGS_DUMP_FILE = "data/tag_data.pickle"
 OVA_DUMP_FILE = "data/ova_classifiers.pickle"
 DOCUMENTS_NO = 6034195
-OVA_TAGS_NO = 1000
+OVA_TAGS_NO = 100
 
-# We will feed the classifier with mini-batches of 50 documents
-# This means we have at most 50 docs in memory at any time.
-MINIBATCH_SIZE = 50
 
 def iter_documents(input_file, transformer, positive_class=None):
     """Single document generator, returns a tuple x, y.
     """ 
     for index, row in enumerate(csv.reader(open(input_file))):
         title = row[1]
-        #description = row[2]
+        description = row[2]
         tags = row[3].split(' ')
         
         if positive_class is None:
             output = tags
         else:
-            output = [int(positive_class in tags)]
-        corpus = [title]
+            output = int(positive_class in tags)
 
-        if index == 1000000:
+        if index == 1000:
             break
 
-        yield (transformer.transform(corpus), output)
+        yield (transformer.transform([title]), transformer.transform([description]), output)
 
+
+# We will feed the classifier with mini-batches of 50 documents
+# This means we have at most 50 docs in memory at any time.
+MINIBATCH_SIZE = 50
 
 def iter_minibatches(input_file, transformer, positive_class=None):
     """Generator of minibatches of examples, returns a tuple x, y.
@@ -55,6 +55,7 @@ def iter_minibatches(input_file, transformer, positive_class=None):
 
         if index % size == size - 1:
             yield (transformer.transform(corpus), output)
+
 
 def static_var(varname, value):
     def decorate(func):
