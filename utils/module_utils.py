@@ -9,7 +9,7 @@ TEST_FILE  = "data/Test_file.csv"
 TAGS_DUMP_FILE = "data/tag_data.pickle"
 OVA_DUMP_FILE = "data/ova_classifiers.pickle"
 DOCUMENTS_NO = 6034195
-OVA_TAGS_NO = 100
+OVA_TAGS_NO = 5000
 
 
 def iter_documents(input_file, transformer, positive_class=None):
@@ -25,10 +25,12 @@ def iter_documents(input_file, transformer, positive_class=None):
         else:
             output = int(positive_class in tags)
 
-        if index == 1000:
+        if input_file == TRAIN_FILE and index == 1000000:
+            break
+        if input_file == TEST_FILE and index == 1000:
             break
 
-        yield (transformer.transform([title]), transformer.transform([description]), output)
+        yield (transformer.transform([title]), [], output)
 
 
 # We will feed the classifier with mini-batches of 50 documents
@@ -40,21 +42,25 @@ def iter_minibatches(input_file, transformer, positive_class=None):
     """
 
     size = MINIBATCH_SIZE
-    corpus = [None] * size
-    output = list(corpus)
+    titles, descriptions, output = [0] * size, [0] * size, [0] * size
+
     for index, row in enumerate(csv.reader(open(input_file))):
-        title = row[1]
-        #description = row[2]
+        titles[index % size] = row[1]
+        descriptions[index % size] = row[2]
         tags = row[3].split(' ')
         
         if positive_class is None:
             output[index % size] = tags
         else:
             output[index % size] = int(positive_class in tags)
-        corpus[index % size] = title
-
+        
         if index % size == size - 1:
-            yield (transformer.transform(corpus), output)
+            yield (transformer.transform(titles), transformer.transform(descriptions), output)
+
+        if input_file == TRAIN_FILE and index == 20000:
+            break
+        if input_file == TEST_FILE and index == 100:
+            break
 
 
 def static_var(varname, value):
