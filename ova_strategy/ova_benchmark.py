@@ -7,7 +7,7 @@ import multiprocessing as mp
 from itertools import izip
 from positive_class_classifier import PositiveClassClassifier
 from utils.module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, TRAIN_FILE, TEST_FILE, \
-    DOCUMENTS_NO, OVA_TAGS_NO, iter_documents, iter_minibatches, print_overwrite
+    OVA_TAGS_NO, iter_documents, iter_minibatches, print_overwrite
 
 from time import time
 def train_PCCs():
@@ -39,7 +39,7 @@ def train_PCCs():
             doc_no, x_title_train, x_description_train, y_train = pipe_data
 
             if doc_no % 500 == 0:
-                print_overwrite("Batch training: worker " + str(worker_id) + " ... " + '(' + "%.3f" % (doc_no * 100.0 / DOCUMENTS_NO) + ' %)')
+                print_overwrite("Batch training: worker " + str(worker_id) + " ... " + str(doc_no) + ' docs')
             
             #positive training for PCCs whose tags appear in y_train
             for tag in y_train:
