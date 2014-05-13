@@ -86,4 +86,12 @@ def plot_distribution(x, y, xlabel, ylabel):
     pl.ylabel(ylabel)
     pl.grid(True)
     pl.plot(x, y)
-    pl.show
+    #pl.figure()
+
+def plot_bars(bars, xlabel, ylabel):
+    pl.figure()
+    pl.bar(range(len(bars)), bars, align = 'center', alpha = 0.6)
+    pl.yticks(bars)
+    pl.xlabel(xlabel)
+    pl.ylabel(ylabel)
+    pl.show()

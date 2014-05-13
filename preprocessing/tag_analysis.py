@@ -6,7 +6,8 @@ import time
 import pickle
 
 from collections import defaultdict
-from utils.module_utils import TAGS_DUMP_FILE, TRAIN_FILE, plot_distribution
+from utils.module_utils import TAGS_DUMP_FILE, TRAIN_FILE, plot_distribution, plot_bars, \
+    print_overwrite, DOCUMENTS_NO
 
 def get_percentile(pct, array):
     freq_sum = 0
@@ -21,15 +22,19 @@ def get_tags_data():
         with open(TAGS_DUMP_FILE, 'rb') as dump_file:
             data = pickle.load(dump_file)
     except IOError:
+        data = {'tag_distribution': [0] * 10}
         keywords = defaultdict(int)
         for index, row in enumerate(csv.reader(open(TRAIN_FILE))):
+            print_overwrite("Scanning ... " + '(' + "%.2f" % (index * 100.0 / DOCUMENTS_NO) + ' %)')
             title = row[1]
             description = row[2]
             tags = row[3].split(' ')
+            data['tag_distribution'][len(tags)] += 1
+
             for tag in tags:
                 keywords[tag] += 1
 
-        data = {'questions_no' : index}
+        data['questions_no'] = index
         data['tag_list'] = sorted([(value, key) for key, value in keywords.iteritems()], reverse = True)
 
         with open(TAGS_DUMP_FILE, 'wb') as dump_file:
@@ -50,5 +55,4 @@ def get_tags_data():
 
 if __name__ == "__main__":
     data = get_tags_data()
-    print data['tag_list'][500:505]
-
+    plot_bars(data['tag_distribution'][:6], "Numar de intrebari", "Numar de etichete")
