@@ -18,7 +18,7 @@ def train_PCCs():
         classifier_tags_to_train = set()
 
         for count, tag in tag_list:
-            tag_count[tag] = {'positives' : min(count, 5000), 'negatives' : min(count, 5000)}
+            tag_count[tag] = {'positives' : min(count, 2000), 'negatives' : min(count, 2000)}
             title_PCCs[tag] = PositiveClassClassifier(tag)
             #description_PCCs[tag] = PositiveClassClassifier(tag)
             classifier_tags_to_train.add(tag)
@@ -76,14 +76,14 @@ def train_PCCs():
 
     if os.path.isfile(OVA_DUMP_FILE):
         with open(OVA_DUMP_FILE, 'rb') as ova_classifiers:
-            PCCs = pickle.load(ova_classifiers)
-            return PCCs
+            title_PCCs, description_PCCs = pickle.load(ova_classifiers)
+            return title_PCCs, description_PCCs 
 
     #the ova_classifiers weren't yet trained -> train them
     with open(TAGS_DUMP_FILE, 'rb') as tags_dump_file:
         tag_list = pickle.load(tags_dump_file)['tag_list'][: OVA_TAGS_NO]
 
-    workers_no = 2 * mp.cpu_count()
+    workers_no = 1#2 * mp.cpu_count()
     worker_load = OVA_TAGS_NO / workers_no
 
     jobs = []
@@ -119,7 +119,7 @@ def train_PCCs():
     return (title_PCCs, description_PCCs)
 
 
-def benchmark_OVA_worker(documents): 
+def benchmark_OVA_worker(title_PCCs, documents): 
     tp = fp = fn = 0
 
     for x_title_test, x_description_test, y_test in documents:
@@ -167,13 +167,13 @@ def benchmark_OVA(title_PCCs, description_PCCs):
         d['fn'] += fn_inc
 
     documents_iterator = iter_documents(TEST_FILE, PositiveClassClassifier.hvectorizer)
-    pool = mp.Pool(processes = 2 * mp.cpu_count())
+    pool = mp.Pool(processes = 2)#2 * mp.cpu_count())
     documents = []
 
     for document in documents_iterator:
         documents.append(document)
         if len(documents) == 25:
-            pool.apply_async(benchmark_OVA_worker, (documents,), callback = add_result)
+            pool.apply_async(benchmark_OVA_worker, (title_PCCs, documents,), callback = add_result)
             documents = []
 
     pool.apply_async(benchmark_OVA_worker, (documents,), callback = add_result)
@@ -186,8 +186,14 @@ def benchmark_OVA(title_PCCs, description_PCCs):
     print "precision:", precision
     print "recall:", recall
     print "F1 score:", 2 * precision * recall / (precision + recall)
-
+    return 2 * precision * recall / (precision + recall)
 
 if __name__ == "__main__": 
     title_PCCs, description_PCCs = train_PCCs()
-    benchmark_OVA(title_PCCs, description_PCCs)
+
+    a = []
+    for i in xrange(1, 16):
+        f1 = benchmark_OVA(title_PCCs[: i * 100], description_PCCs)
+        a.append((i * 100, f1))
+
+    print a

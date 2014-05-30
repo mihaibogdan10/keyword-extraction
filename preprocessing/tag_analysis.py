@@ -55,4 +55,4 @@ def get_tags_data():
 
 if __name__ == "__main__":
     data = get_tags_data()
-    plot_bars(data['tag_distribution'][:6], "Numar de intrebari", "Numar de etichete")
+    plot_bars(data['tag_distribution'][:6], "Numar de etichete", "Numar de intrebari")

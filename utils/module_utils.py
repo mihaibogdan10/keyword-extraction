@@ -9,7 +9,7 @@ TEST_FILE  = "data/Test_file.csv"
 TAGS_DUMP_FILE = "data/tag_data.pickle"
 OVA_DUMP_FILE = "data/ova_classifiers.pickle"
 DOCUMENTS_NO = 6034195
-OVA_TAGS_NO = 5000
+OVA_TAGS_NO = 1500
 
 
 def iter_documents(input_file, transformer, positive_class=None):
@@ -27,7 +27,7 @@ def iter_documents(input_file, transformer, positive_class=None):
 
         if input_file == TRAIN_FILE and index == 1000000:
             break
-        if input_file == TEST_FILE and index == 1000:
+        if input_file == TEST_FILE and index == 400:
             break
 
         yield (transformer.transform([title]), [], output)
@@ -86,7 +86,6 @@ def plot_distribution(x, y, xlabel, ylabel):
     pl.ylabel(ylabel)
     pl.grid(True)
     pl.plot(x, y)
-    #pl.figure()
 
 def plot_bars(bars, xlabel, ylabel):
     pl.figure()
