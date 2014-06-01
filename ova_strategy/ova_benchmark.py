@@ -6,7 +6,7 @@ import multiprocessing as mp
 
 from itertools import izip
 from positive_class_classifier import PositiveClassClassifier
-from utils.module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, TRAIN_FILE, TEST_FILE, \
+from utils.module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, CULLED_TRAIN_FILE, TEST_FILE, \
     OVA_TAGS_NO, iter_documents, iter_minibatches, print_overwrite
 
 from time import time
@@ -18,7 +18,7 @@ def train_PCCs():
         classifier_tags_to_train = set()
 
         for count, tag in tag_list:
-            tag_count[tag] = {'positives' : min(count, 2000), 'negatives' : min(count, 2000)}
+            tag_count[tag] = {'positives' : min(count, 5000), 'negatives' : min(count, 5000)}
             title_PCCs[tag] = PositiveClassClassifier(tag)
             #description_PCCs[tag] = PositiveClassClassifier(tag)
             classifier_tags_to_train.add(tag)
@@ -97,7 +97,7 @@ def train_PCCs():
         p.start()
         jobs.append(p)
     
-    documents_iterator = iter_documents(TRAIN_FILE, PositiveClassClassifier.hvectorizer)
+    documents_iterator = iter_documents(CULLED_TRAIN_FILE, PositiveClassClassifier.hvectorizer)
     for doc_no, (x_train_title, x_train_description, y_train) in enumerate(documents_iterator):
         for pipe in parent_pipes:
             pipe.send((doc_no, x_train_title, x_train_description, y_train))

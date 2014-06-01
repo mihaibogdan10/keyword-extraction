@@ -8,6 +8,8 @@ OVA_TRAIN_FILE = "data/Train_ova.csv"
 TEST_FILE  = "data/Test_file.csv"
 TAGS_DUMP_FILE = "data/tag_data.pickle"
 OVA_DUMP_FILE = "data/ova_classifiers.pickle"
+CULLED_TRAIN_FILE = "data/Train_culled.csv"
+CULLED_TRAIN_FILE_SIZE = 100000
 DOCUMENTS_NO = 6034195
 OVA_TAGS_NO = 1500
 
