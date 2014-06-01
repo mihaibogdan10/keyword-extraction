@@ -18,7 +18,7 @@ def train_PCCs():
         classifier_tags_to_train = set()
 
         for count, tag in tag_list:
-            tag_count[tag] = {'positives' : min(count, 5000), 'negatives' : min(count, 5000)}
+            tag_count[tag] = {'positives' : min(count, 2000), 'negatives' : min(count, 2000)}
             title_PCCs[tag] = PositiveClassClassifier(tag)
             #description_PCCs[tag] = PositiveClassClassifier(tag)
             classifier_tags_to_train.add(tag)
