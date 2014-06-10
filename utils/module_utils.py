@@ -12,7 +12,7 @@ CULLED_TRAIN_FILE = "data/Train_culled.csv"
 TAG_GRAPH_FILE = "data/Tag_graph.pickle"
 CULLED_TRAIN_FILE_SIZE = 150000
 DOCUMENTS_NO = 6034195
-OVA_TAGS_NO = 1500
+OVA_TAGS_NO = 1002
 
 
 def iter_documents(input_file, transformer, positive_class=None):
@@ -28,12 +28,12 @@ def iter_documents(input_file, transformer, positive_class=None):
         else:
             output = int(positive_class in tags)
 
-        if input_file == TRAIN_FILE and index == 1000000:
+        if input_file == TRAIN_FILE and index == 3000000:
             break
-        if input_file == TEST_FILE and index == 400:
+        if input_file == TEST_FILE and index == 100:
             break
 
-        yield (transformer.transform([title]), [], output)
+        yield (transformer.transform([title]), transformer.transform([description]), output)
 
 
 # We will feed the classifier with mini-batches of 50 documents

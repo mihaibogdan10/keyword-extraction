@@ -9,7 +9,7 @@ if __name__ == "__main__":
     with open(TAGS_DUMP_FILE, 'rb') as tags_dump_file:
         tag_list = pickle.load(tags_dump_file)['tag_list']
 
-    tags_set = set([tag for count, tag in tag_list[: OVA_TAGS_NO + 1]])
+    tags_set = set([tag for count, tag in tag_list[: OVA_TAGS_NO]])
     tags_examples = {tag: 100 for tag in tags_set}
 
     #create a train file that has at least 100 examples for each tag
