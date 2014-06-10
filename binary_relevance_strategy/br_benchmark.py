@@ -11,7 +11,7 @@ from time import time
 from collections import defaultdict
 from positive_class_classifier import PositiveClassClassifier
 from utils.module_utils import TAGS_DUMP_FILE, OVA_DUMP_FILE, CULLED_TRAIN_FILE, TEST_FILE, \
-    OVA_TAGS_NO, iter_documents, iter_minibatches, print_overwrite
+    OVA_TAGS_NO, iter_documents, print_overwrite
 
 def train_PCCs():
     def train_PCCs_worker(worker_id, tag_list, pipe, return_queue): 
