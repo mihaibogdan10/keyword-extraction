@@ -5,15 +5,13 @@ import pickle
 import os.path
 import multiprocessing as mp
 
-from copy import deepcopy
 from itertools import izip
 from collections import defaultdict
-from scipy.sparse import vstack, csr_matrix
+from scipy.sparse import vstack
 from binary_relevance_strategy.positive_class_classifier import PositiveClassClassifier
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.neighbors import NearestNeighbors
-from utils.module_utils import CULLED_TRAIN_FILE, TEST_FILE, TAGS_DUMP_FILE, TAGS_NO,\
-    iter_documents, print_overwrite
+from utils.module_utils import CULLED_TRAIN_FILE, TEST_FILE, TAGS_NO, iter_documents
 
 def benchmark_kNN_worker(documents): 
     tp = fp = fn = subsetacc = oneerror = rloss = 0
@@ -21,10 +19,7 @@ def benchmark_kNN_worker(documents):
 
     for x_title_test, x_description_test, y_test in documents:
         title_neighbours = title_neigh.kneighbors(title_tfidf.transform(x_title_test))
-        #print title_neighbours
-
         description_neighbours = description_neigh.kneighbors(description_tfidf.transform(x_description_test))
-        #print description_neighbours
 
         tag_votes = defaultdict(int)
         for index in title_neighbours[1][0]:
@@ -38,8 +33,6 @@ def benchmark_kNN_worker(documents):
                 tag_votes[tag] += 1
 
         sorted_tag_votes = sorted([(votes, tag) for tag, votes in tag_votes.iteritems()], reverse = True)
-        #print sorted_tag_votes[: 10]
-        #print y_test
         predicted_tags = [tag for votes, tag in sorted_tag_votes[:3]]
 
         for predicted_tag in predicted_tags:
