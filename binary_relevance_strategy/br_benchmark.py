@@ -1,6 +1,5 @@
 from __future__ import division
 
-import pylab as pl
 import numpy as np
 import pickle
 import os.path

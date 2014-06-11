@@ -8,11 +8,13 @@ OVA_TRAIN_FILE = "data/Train_ova.csv"
 TEST_FILE  = "data/Test_file.csv"
 TAGS_DUMP_FILE = "data/tag_data.pickle"
 OVA_DUMP_FILE = "data/ova_classifiers.pickle"
+DT_DUMP_FILE = "data/dt_classifiers.pickle"
 CULLED_TRAIN_FILE = "data/Train_culled.csv"
 TAG_GRAPH_FILE = "data/Tag_graph.pickle"
 CULLED_TRAIN_FILE_SIZE = 150000
 DOCUMENTS_NO = 6034195
 OVA_TAGS_NO = 1002
+TAGS_NO = 41999
 
 
 def iter_documents(input_file, transformer, positive_class=None):
@@ -28,9 +30,9 @@ def iter_documents(input_file, transformer, positive_class=None):
         else:
             output = int(positive_class in tags)
 
-        if input_file == TRAIN_FILE and index == 3000000:
+        if input_file in [CULLED_TRAIN_FILE, TRAIN_FILE] and index == 50000:
             break
-        if input_file == TEST_FILE and index == 100:
+        if input_file == TEST_FILE and index == 400:
             break
 
         yield (transformer.transform([title]), transformer.transform([description]), output)
